@@ -1,0 +1,179 @@
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <time.h>
+#include <climits>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <locale>
+
+using namespace std;
+
+struct Course {
+        string courseId; // unique identifier
+        string courseTitle;
+        vector<string> coursePrerequisites;
+};
+
+vector<Course> loadCourses() {
+    vector<Course> courses;
+    string csvFile;
+    string line;
+    int letter;
+    int rowCount = 0;
+    cout << "Enter file name to load into the vector: ";
+    cin >> csvFile;
+
+    ifstream inputFile(csvFile);
+
+    if (inputFile.is_open()) {
+            cout << "File '" << csvFile << "' opened successfully." << endl;
+    }
+    else {
+        cout << "Error: Unable to open the file '" << csvFile << "'. File does not exist or could not be opened." << endl;
+    }
+
+    while (getline(inputFile, line)) {
+      	stringstream linestream(line);
+        string item;
+        Course course;
+        if (getline(linestream, item, ',')) {
+            course.courseId = item;
+        }
+      	if (getline(linestream, item, ',')) {
+            course.courseTitle = item;
+        }
+        while (getline(linestream, item, ',')) {
+            course.coursePrerequisites.push_back(item);
+        }
+      	courses.push_back(course);
+    }
+
+    inputFile.close();
+    return courses;
+}
+
+void sortAndPrintCourses(vector<Course>& courses) {
+    int minIndex;
+
+    if (courses.size() == 0) {
+        cout << "Please Load The Data Structure First (Choose Option 1)" << endl;
+        return;
+    }
+
+    for (int i = 0; i < courses.size(); i++) {
+
+    minIndex = i;  // Start off by assuming the smallest element is the first one
+
+    // Now we'll look at each of the remaining elements
+
+    for (int j = i + 1; j < courses.size(); j++) {
+
+        // If we find an element that's smaller than our current smallest
+
+        if (courses[j].courseId < courses[minIndex].courseId) {
+
+            // We'll record its position
+
+            minIndex = j;
+
+        }
+
+    }
+
+    // We found the min element among the rest of the list, swap it with the current position
+
+    std::swap(courses[i], courses[minIndex]);
+
+    }
+
+    for (const Course& course : courses) {
+        cout << course.courseId << ": " << course.courseTitle;
+
+        for (const string& prerequisite : course.coursePrerequisites) {
+            cout << " | " << prerequisite;
+        }
+        cout << endl;
+    }
+}
+
+void printSpecificCourse(vector<Course>& course, string userInput) {
+    int i = 0;
+
+    for (const Course& course : course) {
+        if (userInput == course.courseId) {
+            cout << course.courseId << ": " << course.courseTitle << endl << "Prerequisites: ";
+            for (const string& prerequisite : course.coursePrerequisites) {
+                if (i < course.coursePrerequisites.size() - 1) {
+                    cout << prerequisite << ", ";
+                } else {
+                    cout << prerequisite;
+                }
+                i++;
+            }
+            cout << endl;
+            return;
+        }
+    }
+
+    cout << "Invalid. The Course ID You Entered Does Not Exist" << endl;
+}
+
+int main(int argc, char* argv[]) {
+
+    vector<Course> courses;
+
+    int choice = 0;
+    string courseSpecification;
+    locale lock;
+
+    cout << "Welcome to the Course Planner" << endl << endl;
+    while (choice != 9) {
+        cout << "Menu:" << endl;
+        cout << "  1. Load Data Structure" << endl;
+        cout << "  2. Print Course List" << endl;
+        cout << "  3. Print Course" << endl;
+        cout << "  9. Exit" << endl;
+        cout << "Enter Choice: ";
+        cin >> choice;
+
+        if (choice != 1 && choice != 2 && choice != 3 && choice != 9) {
+            cout << "Invalid Option. Please Try Again" << endl;
+            cin.clear();
+            cin.ignore();
+        }
+
+        switch (choice) {
+
+        case 1:
+            courses = loadCourses();
+
+            break;
+        case 2:
+            sortAndPrintCourses(courses);
+
+            break;
+        case 3:
+            if (courses.size() == 0) {
+                cout << "Please Load The Data Structure First (Choose Option 1)" << endl;
+                break;
+            }
+
+            cout << "Enter the Course you Would Like to Know About: ";
+            cin >> courseSpecification;
+            cout << endl;
+
+            transform(courseSpecification.begin(), courseSpecification.end(), courseSpecification.begin(), ::toupper);
+
+            printSpecificCourse(courses, courseSpecification);
+
+
+            cout << endl;
+
+            break;
+        }
+    }
+    cout << "Program Ended..." << endl;
+    return 0;
+}
